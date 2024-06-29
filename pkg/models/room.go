@@ -9,7 +9,7 @@ import (
 type (
 	Room struct {
 		UUID          primitive.Binary
-		Roomowneruuid primitive.Binary
+		RoomOwnerUuid primitive.Binary
 		Members       []primitive.Binary
 		Messages      []primitive.Binary
 		Joincode      string
