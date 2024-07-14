@@ -41,3 +41,7 @@ func (repo *MongoUserRepository) ReadUserByUuid(ctx context.Context, uuid string
 	}
 	return &user, nil
 }
+
+// TODO implement UpdateUser
+
+// TODO implement DeleteUser
