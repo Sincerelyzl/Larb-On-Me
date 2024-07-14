@@ -1,5 +1,1 @@
 package discovery
-
-func test() {
-
-}
