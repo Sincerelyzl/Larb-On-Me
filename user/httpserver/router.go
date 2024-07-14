@@ -22,9 +22,3 @@ func initRouter(userHandler handler.UserHandler) *gin.Engine {
 	setupUserRouteV1(r, userHandler)
 	return r
 }
-
-func setupUserRouteV1(r *gin.Engine, userHandler handler.UserHandler) {
-	userRoutesV1 := r.Group("/v1")
-
-	userRoutesV1.POST("/register", userHandler.Register)
-}
