@@ -1,91 +1,51 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/Sincerelyzl/larb-on-me/common/middleware"
+	"github.com/Sincerelyzl/larb-on-me/common/database"
+	"github.com/Sincerelyzl/larb-on-me/user/handler"
+	"github.com/Sincerelyzl/larb-on-me/user/httpserver"
+	"github.com/Sincerelyzl/larb-on-me/user/repository"
+	"github.com/Sincerelyzl/larb-on-me/user/usecase"
 )
 
-type test2 struct {
-	Message    string `json:"message"`
-	Connection string `json:"connection"`
-	Content    string `json:"content"`
-}
 type test struct {
-	Username string  `json:"username"`
-	Role     string  `json:"role"`
-	Name     string  `json:"name"`
-	Position string  `json:"position"`
-	Date     string  `json:"date"`
-	Age      int     `json:"age"`
-	Mores    []test2 `json:"mores"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
 }
 
 func main() {
 
 	// create context.
-	// ctx := context.Background()
+	ctx := context.Background()
 
-	userInput := test{
-		Username: "test",
-		Role:     "admin",
-		Name:     "test",
-		Position: "test",
-		Date:     "test",
-		Age:      20,
-		Mores: []test2{
-			{
-				Message:    "test",
-				Connection: "test",
-				Content:    "test",
-			},
-			{
-				Message:    "test",
-				Connection: "test",
-				Content:    "test",
-			},
-		},
-	}
-	encrypted, err := middleware.GenerateLOMKeys(userInput)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("\nencrypyed:" + encrypted)
-
-	claimsUser := test{}
-	err = middleware.ClaimsLOM(encrypted, &claimsUser)
+	// Connect to database server.
+	client, err := database.NewConnection(ctx, "mongodb://localhost:27018/")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("\ndecrypted:" + fmt.Sprintf("%v", claimsUser))
-	// create claims.
+	// Get all collection need to use.
+	userCollection := client.Database("user_service").Collection("users")
 
-	// // Connect to database server.
-	// client, err := database.NewConnection(ctx, "mongodb://localhost:27018/")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	// Create all repository to use.
+	userRepo := repository.NewMongoUserRepository(userCollection)
 
-	// // Get all collection need to use.
-	// userCollection := client.Database("user_service").Collection("users")
+	// Create all usecase to use.
+	userUseCase := usecase.NewUserUsecase(userRepo)
 
-	// // Create all repository to use.
-	// userRepo := repository.NewMongoUserRepository(userCollection)
+	// Create all handler to use.
+	userHandler := handler.NewUserHandler(userUseCase)
 
-	// // Create all usecase to use.
-	// userUseCase := usecase.NewUserUsecase(userRepo)
+	// Create all http server to use.
+	userHttpServer := httpserver.NewHTTPServer(userHandler)
 
-	// // Create all handler to use.
-	// userHandler := handler.NewUserHandler(userUseCase)
-
-	// // Create all http server to use.
-	// userHttpServer := httpserver.NewHTTPServer(userHandler)
-
-	// // Run http server.
-	// fmt.Println("User service is running on port 3008")
-	// if err := userHttpServer.Run("3008"); err != nil {
-	// 	panic(err)
-	// }
+	// Run http server.
+	fmt.Println("User service is running on port 3008")
+	if err := userHttpServer.Run("3008"); err != nil {
+		panic(err)
+	}
 
 }
