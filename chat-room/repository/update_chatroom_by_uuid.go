@@ -8,13 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (repo *chatRoomRepository) UpdateChatroomByUuid(ctx context.Context, uuid string, updateChatRoom models.ChatRoom) (*models.ChatRoom, error) {
+func (repo *chatRoomRepository) UpdateChatRoomByUuid(ctx context.Context, uuid string, updateChatRoom models.ChatRoom) (*models.ChatRoom, error) {
 	var chatroom models.ChatRoom
 	filter := bson.M{
 		"uuid": uuid,
 	}
 
-	foundChatroom := repo.chatroomCollection.FindOne(ctx, filter)
+	foundChatroom := repo.collection.FindOne(ctx, filter)
 	err := foundChatroom.Decode(&chatroom)
 	if err != nil {
 		return nil, fmt.Errorf("can't find this chatroom by uuid %s", uuid)
@@ -22,7 +22,7 @@ func (repo *chatRoomRepository) UpdateChatroomByUuid(ctx context.Context, uuid s
 
 	chatroom = updateChatRoom
 
-	if _, err := repo.chatroomCollection.UpdateOne(ctx, filter, chatroom); err != nil {
+	if _, err := repo.collection.UpdateOne(ctx, filter, chatroom); err != nil {
 		return nil, fmt.Errorf("can't update ChatRoom of this uuid %s", uuid)
 	}
 	return &chatroom, nil

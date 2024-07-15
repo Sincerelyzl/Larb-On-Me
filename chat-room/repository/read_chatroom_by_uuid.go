@@ -8,13 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (repo *chatRoomRepository) ReadChatroomByUuid(ctx context.Context, uuid string) (*models.ChatRoom, error) {
+func (repo *chatRoomRepository) ReadChatRoomByUuid(ctx context.Context, uuid string) (*models.ChatRoom, error) {
 	var chatroom models.ChatRoom
 	filter := bson.M{
 		"uuid": uuid,
 	}
 
-	foundChatroom := repo.chatroomCollection.FindOne(ctx, filter)
+	foundChatroom := repo.collection.FindOne(ctx, filter)
 	err := foundChatroom.Decode(&chatroom)
 	if err != nil {
 		return nil, fmt.Errorf("can't find this chatroom by uuid %s", uuid)

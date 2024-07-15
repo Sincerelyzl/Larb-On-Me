@@ -8,13 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (repo *chatRoomRepository) ReadUserByRoomname(ctx context.Context, roomname string) (*models.ChatRoom, error) {
+func (repo *chatRoomRepository) ReadChatRoomByRoomName(ctx context.Context, roomname string) (*models.ChatRoom, error) {
 	chatroom := models.ChatRoom{}
 	filter := bson.M{
 		"name": roomname,
 	}
 
-	foundChatroom := repo.chatroomCollection.FindOne(ctx, filter)
+	foundChatroom := repo.collection.FindOne(ctx, filter)
 	err := foundChatroom.Decode(&chatroom)
 	if err != nil && err.Error() != "mongo: no documents in result" {
 		return nil, fmt.Errorf("can't find chatroom by roomname %s", roomname)
