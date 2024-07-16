@@ -9,6 +9,7 @@ import (
 
 type UserUsecase interface {
 	CreateNewUser(ctx context.Context, username string, password string) (*models.User, error)
+	Login(ctx context.Context, username string, password string) (*models.User, error)
 }
 
 type userUsecase struct {

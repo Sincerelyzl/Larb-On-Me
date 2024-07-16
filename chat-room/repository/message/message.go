@@ -17,3 +17,4 @@ type MessageReposotiry interface {
 type messageRepository struct {
 	collection *mongo.Collection
 }
+

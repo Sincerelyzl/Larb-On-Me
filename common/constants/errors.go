@@ -1,5 +1,8 @@
 package constants
 
-const (
-	ErrCantParseBody = "cant parse body bad request."
+import "errors"
+
+var (
+	ErrCantParseBody    = errors.New("cant parse body bad request")
+	ErrPasswordMismatch = errors.New("username or password not found")
 )
