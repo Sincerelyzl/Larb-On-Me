@@ -11,11 +11,6 @@ import (
 	"github.com/Sincerelyzl/larb-on-me/user/usecase"
 )
 
-type test struct {
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
-
 func main() {
 
 	// create context.
@@ -26,6 +21,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer client.Disconnect(ctx)
 
 	// Get all collection need to use.
 	userCollection := client.Database("user_service").Collection("users")
@@ -47,5 +43,4 @@ func main() {
 	if err := userHttpServer.Run("3008"); err != nil {
 		panic(err)
 	}
-
 }
