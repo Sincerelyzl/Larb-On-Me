@@ -18,3 +18,8 @@ type messageRepository struct {
 	collection *mongo.Collection
 }
 
+func NewMongoMessageRepository(collection *mongo.Collection) MessageReposotiry {
+	return &messageRepository{
+		collection: collection,
+	}
+}
