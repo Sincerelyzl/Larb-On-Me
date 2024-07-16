@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Sincerelyzl/larb-on-me/common/models"
+	"github.com/Sincerelyzl/larb-on-me/common/utils"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CreateChatRoom
@@ -26,8 +28,11 @@ func (repo *chatRoomRepository) ReadChatRoomByRoomName(ctx context.Context, room
 
 	foundChatroom := repo.collection.FindOne(ctx, filter)
 	err := foundChatroom.Decode(&chatroom)
-	if err != nil && err.Error() != "mongo: no documents in result" {
-		return nil, fmt.Errorf("can't find chatroom by roomname %s", roomname)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("can't find this chatroom by this name %s", roomname)
+		}
+		return nil, fmt.Errorf("error occurred while searching for chatroom: %v", err)
 	}
 	return &chatroom, nil
 }
@@ -35,27 +40,61 @@ func (repo *chatRoomRepository) ReadChatRoomByRoomName(ctx context.Context, room
 // Get ChatRoom by  uuid
 func (repo *chatRoomRepository) ReadChatRoomByUuid(ctx context.Context, uuid string) (*models.ChatRoom, error) {
 	var chatroom models.ChatRoom
+
+	uuidHash, err := utils.UuidV7FromString(uuid)
+	if err != nil {
+		return nil, fmt.Errorf("can't convert uuid string %s to uuid hash", uuid)
+	}
+
 	filter := bson.M{
-		"uuid": uuid,
+		"uuid": uuidHash,
+	}
+
+	foundChatroom := repo.collection.FindOne(ctx, filter)
+	err = foundChatroom.Decode(&chatroom)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("can't find this chatroom by this uuid %s", uuid)
+		}
+		return nil, fmt.Errorf("error occurred while searching for chatroom: %v", err)
+	}
+	return &chatroom, nil
+}
+
+// Read ChatRoom by join code
+func (repo *chatRoomRepository) ReadChatRoomByJoinCode(ctx context.Context, joinCode string) (*models.ChatRoom, error) {
+	var chatroom models.ChatRoom
+	filter := bson.M{
+		"join_code": joinCode,
 	}
 
 	foundChatroom := repo.collection.FindOne(ctx, filter)
 	err := foundChatroom.Decode(&chatroom)
 	if err != nil {
-		return nil, fmt.Errorf("can't find this chatroom by uuid %s", uuid)
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("can't find this chatroom by this joincode %s", joinCode)
+		}
+		return nil, fmt.Errorf("error occurred while searching for chatroom: %v", err)
 	}
 	return &chatroom, nil
 }
 
 // Update ChatRoom by uuid
 func (repo *chatRoomRepository) UpdateChatRoomByUuid(ctx context.Context, uuid string, updateChatRoom models.ChatRoom) (*models.ChatRoom, error) {
+
 	var chatroom models.ChatRoom
+
+	uuidHash, err := utils.UuidV7FromString(uuid)
+	if err != nil {
+		return nil, fmt.Errorf("can't convert uuid string %s to uuid hash", uuid)
+	}
+
 	filter := bson.M{
-		"uuid": uuid,
+		"uuid": uuidHash,
 	}
 
 	foundChatroom := repo.collection.FindOne(ctx, filter)
-	err := foundChatroom.Decode(&chatroom)
+	err = foundChatroom.Decode(&chatroom)
 	if err != nil {
 		return nil, fmt.Errorf("can't find this chatroom by uuid %s", uuid)
 	}
@@ -70,11 +109,17 @@ func (repo *chatRoomRepository) UpdateChatRoomByUuid(ctx context.Context, uuid s
 
 // Delete ChatRoom by uuid
 func (repo *chatRoomRepository) DeleteChatRoomByUuid(ctx context.Context, uuid string) error {
-	filter := bson.M{
-		"uuid": uuid,
+
+	uuidHash, err := utils.UuidV7FromString(uuid)
+	if err != nil {
+		return fmt.Errorf("can't convert uuid string %s to uuid hash", uuid)
 	}
 
-	_, err := repo.collection.DeleteOne(ctx, filter)
+	filter := bson.M{
+		"uuid": uuidHash,
+	}
+
+	_, err = repo.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("can't Delete chatroom by uuid %s", uuid)
 	}
