@@ -7,6 +7,8 @@ import (
 
 type UserHandler interface {
 	Register(c *gin.Context)
+	Login(c *gin.Context)
+	ChangePassword(c *gin.Context)
 }
 
 type userHandler struct {

@@ -17,11 +17,11 @@ type UserRepository interface {
 }
 
 type userRepository struct {
-	userCollection *mongo.Collection
+	collection *mongo.Collection
 }
 
 func NewMongoUserRepository(collection *mongo.Collection) UserRepository {
 	return &userRepository{
-		userCollection: collection,
+		collection: collection,
 	}
 }

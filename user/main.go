@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/Sincerelyzl/larb-on-me/common/database"
 	"github.com/Sincerelyzl/larb-on-me/user/handler"
@@ -14,9 +13,6 @@ import (
 
 func main() {
 
-	// disable TLS verification.
-	http.DefaultTransport.(*http.Transport).TLSClientConfig.InsecureSkipVerify = true
-
 	// create context.
 	ctx := context.Background()
 
@@ -25,6 +21,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer client.Disconnect(ctx)
 
 	// Get all collection need to use.
 	userCollection := client.Database("user_service").Collection("users")
@@ -46,5 +43,4 @@ func main() {
 	if err := userHttpServer.Run("3008"); err != nil {
 		panic(err)
 	}
-
 }
