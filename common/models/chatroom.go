@@ -17,3 +17,11 @@ type ChatRoom struct {
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
 	DeletedAt    *time.Time         `json:"deleted_at" bson:"deleted_at"`
 }
+
+type CreateChatRoomRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+type JoinChatRoomRequest struct {
+	JoinCode string `json:"join_code" binding:"required"`
+}

@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/Sincerelyzl/larb-on-me/chat-room/models"
+	"github.com/Sincerelyzl/larb-on-me/common/models"
 	"github.com/Sincerelyzl/larb-on-me/common/utils"
 	"github.com/gin-gonic/gin"
 )

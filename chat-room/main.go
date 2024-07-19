@@ -19,18 +19,22 @@ func main() {
 	// create context.
 	ctx := context.Background()
 
-	// Connect to database server.
-	ctxtimeout, cancel := context.WithTimeout(ctx, 3*time.Second)
+	// create connection database timeout.
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	client, err := database.NewConnection(ctxtimeout, "mongodb://localhost:27019")
+
+	// Connect to database server.
+	client, err := database.NewConnection(ctxWithTimeout, "mongodb://localhost:27018/")
 	if err != nil {
 		panic(err)
 	}
 	defer client.Disconnect(ctx)
-	err = client.Ping(ctx, nil)
-	if err != nil {
+
+	// Check connection.
+	if err := client.Ping(ctx, nil); err != nil {
 		panic(err)
 	}
+
 	// Get all collection need to use.
 	chatRoomCollection := client.Database("chatroom_service").Collection("chatrooms")
 
@@ -49,7 +53,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	// Run http server.
-	fmt.Println("User service is running on port 3009")
+	fmt.Println("user-service is running on port 3009")
 	if err := chatRoomHttpServer.Run("3009"); err != nil {
 		panic(err)
 	}
