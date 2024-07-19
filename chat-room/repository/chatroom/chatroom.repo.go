@@ -30,7 +30,7 @@ func (repo *chatRoomRepository) ReadChatRoomByRoomName(ctx context.Context, room
 	err := foundChatroom.Decode(&chatroom)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("can't find this chatroom by this name %s", roomname)
+			return nil, mongo.ErrNoDocuments
 		}
 		return nil, fmt.Errorf("error occurred while searching for chatroom: %v", err)
 	}
@@ -54,7 +54,7 @@ func (repo *chatRoomRepository) ReadChatRoomByUuid(ctx context.Context, uuid str
 	err = foundChatroom.Decode(&chatroom)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("can't find this chatroom by this uuid %s", uuid)
+			return nil, mongo.ErrNoDocuments
 		}
 		return nil, fmt.Errorf("error occurred while searching for chatroom: %v", err)
 	}
@@ -72,7 +72,7 @@ func (repo *chatRoomRepository) ReadChatRoomByJoinCode(ctx context.Context, join
 	err := foundChatroom.Decode(&chatroom)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("can't find this chatroom by this joincode %s", joinCode)
+			return nil, mongo.ErrNoDocuments
 		}
 		return nil, fmt.Errorf("error occurred while searching for chatroom: %v", err)
 	}

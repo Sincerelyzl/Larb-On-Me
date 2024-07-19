@@ -9,12 +9,14 @@ import (
 )
 
 func (chh *chatRoomHandler) CreateChatRoom(c *gin.Context) {
+
 	var reqBody models.CreateChatRoomRequest
 	if err := c.ShouldBind(&reqBody); err != nil {
 		errResponse := utils.NewErrorResponse(http.StatusBadRequest, "invalid request body")
 		c.JSON(errResponse.StatusCode, errResponse)
 		return
 	}
+
 	chatRoom, err := chh.chatRoomUsecase.CreateChatRoom(c, reqBody)
 	if err != nil {
 		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())

@@ -3,17 +3,18 @@ package usecase
 import (
 	"context"
 	"errors"
-	"time"
 
 	chatRoomModel "github.com/Sincerelyzl/larb-on-me/chat-room/models"
 	"github.com/Sincerelyzl/larb-on-me/common/models"
 	"github.com/Sincerelyzl/larb-on-me/common/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom chatRoomModel.CreateChatRoomRequest) (*models.ChatRoom, error) {
 
 	// Generate new uuid version 7
+
 	uuidV7, err := utils.NewUuidV7()
 	if err != nil {
 		return nil, err
@@ -27,7 +28,7 @@ func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom chatRoom
 		}
 
 		existChatRoom, err := uc.chatRoomRepo.ReadChatRoomByJoinCode(ctx, joinCode)
-		if err != nil {
+		if err != nil && err != mongo.ErrNoDocuments {
 			continue
 		}
 		if existChatRoom == nil {
@@ -43,10 +44,11 @@ func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom chatRoom
 	newChatRoom.MessagesUuid = []primitive.Binary{}
 	newChatRoom.Name = chatroom.Name
 	newChatRoom.JoinCode = joinCode
-	newChatRoom.CreatedAt = time.Now().UTC()
-	newChatRoom.UpdatedAt = time.Now().UTC()
-
+	newChatRoom.CreatedAt = utils.GetNowUTCTime()
+	newChatRoom.UpdatedAt = utils.GetNowUTCTime()
+	newChatRoom.DeletedAt = nil
 	// Save chatroom to database
+
 	createdChatRoom, err := uc.chatRoomRepo.CreateChatRoom(ctx, newChatRoom)
 	if err != nil {
 		return nil, err
@@ -135,7 +137,8 @@ func (uc *chatRoomUsecase) DeleteChatRoom(ctx context.Context, chatRoomOwner mod
 	}
 
 	// delete chatroom from database
-	deleteChatRoom.DeletedAt = utils.GetNowUTCTime()
+	deleteAt := utils.GetNowUTCTime()
+	deleteChatRoom.DeletedAt = &deleteAt
 
 	// update chatroom to database
 	_, err = uc.chatRoomRepo.UpdateChatRoomByUuid(ctx, chatRoomUuid, *deleteChatRoom)
