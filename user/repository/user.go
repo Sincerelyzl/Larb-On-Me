@@ -13,6 +13,7 @@ type UserRepository interface {
 	ReadUserByUsername(ctx context.Context, username string) (*models.User, error)
 	CountUserByUsername(ctx context.Context, username string) (int64, error)
 	UpdateUserByUuid(ctx context.Context, uuid string, updateUser models.User) (*models.User, error)
+	UpdateUser(ctx context.Context, filter, updateUser models.User) (*models.User, error)
 	DeleteUserByUuid(ctx context.Context, uuid string) error
 }
 

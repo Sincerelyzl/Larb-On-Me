@@ -1,6 +1,6 @@
 module github.com/Sincerelyzl/larb-on-me/user
 
-go 1.22.4
+go 1.23
 
 require (
 	github.com/Sincerelyzl/larb-on-me/common v0.0.0-20240714145021-affa999334c1
