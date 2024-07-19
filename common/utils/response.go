@@ -8,7 +8,7 @@ type ErrorResponse struct {
 type SuccessResponse struct {
 	StatusCode int         `json:"status_code"`
 	Message    string      `json:"message"`
-	Data       interface{} `json:"data"`
+	Data       interface{} `json:"data",omitempty`
 }
 
 func NewErrorResponse(statusCode int, message string) ErrorResponse {
@@ -18,7 +18,10 @@ func NewErrorResponse(statusCode int, message string) ErrorResponse {
 	}
 }
 
-func NewSuccessResponse(statusCode int, message string, data interface{}) SuccessResponse {
+func NewSuccessResponse(statusCode int, message string, data any) SuccessResponse {
+	if data == nil {
+		data = struct{}{}
+	}
 	return SuccessResponse{
 		StatusCode: statusCode,
 		Message:    message,

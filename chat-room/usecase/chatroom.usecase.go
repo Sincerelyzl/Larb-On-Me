@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 
-	chatRoomModel "github.com/Sincerelyzl/larb-on-me/chat-room/models"
 	"github.com/Sincerelyzl/larb-on-me/common/models"
 	"github.com/Sincerelyzl/larb-on-me/common/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom chatRoomModel.CreateChatRoomRequest) (*models.ChatRoom, error) {
+func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom models.CreateChatRoomRequest) (*models.ChatRoom, error) {
 
 	// Generate new uuid version 7
 
@@ -57,7 +56,7 @@ func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom chatRoom
 	return createdChatRoom, nil
 }
 
-func (uc *chatRoomUsecase) JoinChatRoomByJoinCode(ctx context.Context, joinUser models.User, joinCode chatRoomModel.JoinChatRoomRequest) (*models.ChatRoom, error) {
+func (uc *chatRoomUsecase) JoinChatRoomByJoinCode(ctx context.Context, joinUser models.User, joinCode models.JoinChatRoomRequest) (*models.ChatRoom, error) {
 	// Find chatroom by join code
 	chatRoom, err := uc.chatRoomRepo.ReadChatRoomByJoinCode(ctx, joinCode.JoinCode)
 	if err != nil {
