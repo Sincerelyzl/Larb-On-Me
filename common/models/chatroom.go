@@ -8,6 +8,7 @@ import (
 
 type ChatRoom struct {
 	Uuid         primitive.Binary   `json:"uuid" bson:"uuid"`
+	OwnerUuid    primitive.Binary   `json:"owner_uuid" bson:"owner_uuid"`
 	UsersUuid    []primitive.Binary `json:"users_uuid" bson:"users_uuid"`
 	MessagesUuid []primitive.Binary `json:"messages_uuid" bson:"messages_uuid"`
 	Name         string             `json:"name" bson:"name"`
@@ -19,4 +20,8 @@ type ChatRoom struct {
 
 type CreateChatRoomRequest struct {
 	Name string `json:"name" binding:"required"`
+}
+
+type JoinChatRoomRequest struct {
+	JoinCode string `json:"join_code" bson:"join_code"`
 }
