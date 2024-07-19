@@ -19,5 +19,5 @@ func NewHTTPServer(userHandler handler.UserHandler) *server {
 }
 
 func (s *server) Run(port string) error {
-	return s.Router.Run(":" + port)
+	return s.Router.Run(port)
 }
