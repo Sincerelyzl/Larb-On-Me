@@ -10,6 +10,7 @@ type UserHandler interface {
 	Login(c *gin.Context)
 	ChangePassword(c *gin.Context)
 	DeleteUser(c *gin.Context)
+	GetUsers(c *gin.Context)
 }
 
 type userHandler struct {

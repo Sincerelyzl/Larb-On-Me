@@ -12,6 +12,7 @@ type UserUsecase interface {
 	Login(ctx context.Context, username string, password string) (*models.User, error)
 	ChangePassword(ctx context.Context, uuid string, oldPassword string, newPassword string) error
 	DeleteUser(ctx context.Context, uuid string) (*models.User, error)
+	GetUsers(ctx context.Context, page int64) ([]*models.User, error)
 }
 
 type userUsecase struct {
