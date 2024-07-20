@@ -1,7 +1,8 @@
-go 1.23
+go 1.23rc2
 
 use (
 	./chat-room
 	./common
+	./discovery
 	./user
 )
