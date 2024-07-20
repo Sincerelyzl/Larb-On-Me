@@ -38,12 +38,13 @@ type UserRegisterRequest struct {
 }
 
 type UserResponse struct {
-	Uuid            string    `json:"uuid"`
-	ChatRoomsUuid   []string  `json:"chat_rooms_uuid"`
-	Username        string    `json:"username"`
-	PermissionGroup string    `json:"permission_group"`
-	CreatedAt       time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at" bson:"updated_at"`
+	Uuid            string     `json:"uuid"`
+	ChatRoomsUuid   []string   `json:"chat_rooms_uuid"`
+	Username        string     `json:"username"`
+	PermissionGroup string     `json:"permission_group"`
+	CreatedAt       time.Time  `json:"created_at" bson:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at" bson:"updated_at"`
+	DeletedAt       *time.Time `json:"deleted_at" bson:"deleted_at"`
 }
 
 type UserLoginRequest struct {

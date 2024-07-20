@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/Sincerelyzl/larb-on-me/common/constants"
 	"github.com/Sincerelyzl/larb-on-me/common/models"
@@ -29,6 +30,27 @@ func (uc *userUsecase) Login(ctx context.Context, username, password string) (*m
 	}
 
 	return user, nil
+}
+
+func (uc *userUsecase) GetUsers(ctx context.Context, page int64) ([]*models.User, error) {
+	// set limit and offset for pagination
+	limit := constants.LimitPagination
+	offset := limit * (page - 1)
+
+	// create pagination object
+	pagination := &models.Pagination{
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	// find all user
+	users, err := uc.userRepo.ReadUsers(ctx, pagination)
+	if err != nil {
+		log.Println("error get users: ", err)
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (uc *userUsecase) CreateNewUser(ctx context.Context, username string, password string) (*models.User, error) {
@@ -87,6 +109,12 @@ func (u *userUsecase) ChangePassword(ctx context.Context, uuid string, oldPasswo
 		return err
 	}
 
+	// compare old password
+	match := utils.VerifyPassword(oldPassword, user.Password)
+	if !match {
+		return constants.ErrOldPasswordNotMatch
+	}
+
 	// encrypt new password
 	encryptedNewPassword, err := utils.HashPassword(newPassword)
 	if err != nil {
@@ -106,12 +134,25 @@ func (u *userUsecase) ChangePassword(ctx context.Context, uuid string, oldPasswo
 }
 
 func (u *userUsecase) DeleteUser(ctx context.Context, uuid string) (*models.User, error) {
-	// delete user by uuid
-	err := u.userRepo.DeleteUserByUuid(ctx, uuid)
+	// find user by uuid
+	userShouldDelete, err := u.userRepo.ReadUserByUuid(ctx, uuid)
 	if err != nil {
 		return nil, err
 	}
 
+	if userShouldDelete.DeletedAt != nil {
+		return nil, fmt.Errorf(constants.ErrUserDeleted, userShouldDelete.DeletedAt.Format(constants.TimeLayout))
+	}
+
+	// delete user by uuid
+	deletedAtTime, err := u.userRepo.DeleteUserByUuid(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	// set deleted at time to user
+	userShouldDelete.DeletedAt = deletedAtTime
+
 	// return nil if success
-	return nil, nil
+	return userShouldDelete, nil
 }
