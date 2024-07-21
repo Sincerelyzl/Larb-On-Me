@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +10,9 @@ import (
 	"time"
 
 	"github.com/Sincerelyzl/larb-on-me/common/database"
+	"github.com/Sincerelyzl/larb-on-me/common/middleware"
+	"github.com/Sincerelyzl/larb-on-me/discovery"
+	"github.com/Sincerelyzl/larb-on-me/discovery/consul"
 	"github.com/Sincerelyzl/larb-on-me/user/handler"
 	"github.com/Sincerelyzl/larb-on-me/user/httpserver"
 	"github.com/Sincerelyzl/larb-on-me/user/repository"
@@ -59,13 +61,32 @@ func main() {
 		Handler: userHttpServer.Router,
 	}
 
+	// registry consul
+	registry, err := consul.NewRegistry("localhost:8500", "user-service")
+	if err != nil {
+		panic(err)
+	}
+	instanceId := discovery.GenerateInstaceId("user-service")
+	if err = registry.Register(ctx, instanceId, "user-service", "localhost:3008"); err != nil {
+		panic(err)
+	}
+
+	go func() {
+		for {
+			if err := registry.HealthCheck(instanceId, "user-service"); err != nil {
+				middleware.LogGlobal.Log.Error("health check", "error", err)
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
 	// Handle signal.
 	done := make(chan os.Signal)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
 	// Run http server.
 	go func() {
-		fmt.Println("user-service is running on port " + server.Addr)
+		middleware.LogGlobal.Log.Info("user-service is running", "port", "3008")
 		if err := userHttpServer.Run(server.Addr); err != nil {
 			panic(err)
 		}
@@ -74,13 +95,17 @@ func main() {
 	// Wait for signal.
 	<-done
 
+	// unregister consul
+	if err = registry.Unregister(ctx, instanceId, "user-service"); err != nil {
+		middleware.LogGlobal.Log.Error("unregister service", "error", err)
+	}
+
 	// Shutdown http server.
 	fmt.Println("user-service is shutting down")
 	ctxWithTimeout, cancel = context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		log.Println("error while shutting down Server. Initiating force shutdown...")
-		log.Fatalln(err)
+		middleware.LogGlobal.Log.Fatal("server shutdown", "error", err)
 	}
-	log.Println("server exiting")
+	middleware.LogGlobal.Log.Info("shutdown gracefully", "service", "user-service")
 }

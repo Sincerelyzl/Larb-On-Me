@@ -1,0 +1,6 @@
+services:
+  consul:
+    image: "hashicorp/consul"
+    command: "agent -server -ui -node=larb-on-me-server-1 -bootstrap-expect=1 -client=0.0.0.0"
+    ports:
+      - "8500:8500"
