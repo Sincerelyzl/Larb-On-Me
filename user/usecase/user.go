@@ -13,6 +13,7 @@ type UserUsecase interface {
 	ChangePassword(ctx context.Context, uuid string, oldPassword string, newPassword string) error
 	DeleteUser(ctx context.Context, uuid string) (*models.User, error)
 	GetUsers(ctx context.Context, page int64) ([]*models.User, error)
+	AddChatRoomUUID(ctx context.Context, userUuid string, chatRoomUUID string) error
 }
 
 type userUsecase struct {

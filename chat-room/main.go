@@ -52,27 +52,6 @@ func main() {
 		panic(err)
 	}
 
-	// Get all collection need to use.
-	chatRoomCollection := client.Database(mongoDatabaseName).Collection(collectionChatRoomName)
-
-	// Create all repository to use.
-	chatRoomRepo := repository.NewMongoChatroomRepository(chatRoomCollection)
-
-	// Create all usecase to use.
-	chatRoomUseCase := usecase.NewChatRoomUsecase(chatRoomRepo)
-
-	// Create all handler to use.
-	chatRoomHandler := handler.NewChatRoomHandler(chatRoomUseCase)
-
-	// Create all http server to use.
-	chatRoomHttpServer := httpserver.NewHTTPServer(chatRoomHandler)
-
-	// create http server.
-	server := &http.Server{
-		Addr:    servicePort,
-		Handler: chatRoomHttpServer.Router,
-	}
-
 	// registry consul
 	registry, err := consul.NewRegistry(consulAddress, serviceName)
 	if err != nil {
@@ -85,6 +64,27 @@ func main() {
 
 	// Health check.
 	discovery.CreateThreadHealthCheck(ctx, registry, instanceId, serviceName)
+
+	// Get all collection need to use.
+	chatRoomCollection := client.Database(mongoDatabaseName).Collection(collectionChatRoomName)
+
+	// Create all repository to use.
+	chatRoomRepo := repository.NewMongoChatroomRepository(chatRoomCollection)
+
+	// Create all usecase to use.
+	chatRoomUseCase := usecase.NewChatRoomUsecase(chatRoomRepo, registry)
+
+	// Create all handler to use.
+	chatRoomHandler := handler.NewChatRoomHandler(chatRoomUseCase)
+
+	// Create all http server to use.
+	chatRoomHttpServer := httpserver.NewHTTPServer(chatRoomHandler)
+
+	// create http server.
+	server := &http.Server{
+		Addr:    servicePort,
+		Handler: chatRoomHttpServer.Router,
+	}
 
 	// Handle signal.
 	done := make(chan os.Signal)

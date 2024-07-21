@@ -265,3 +265,37 @@ func (h *userHandler) GetUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, usersResponse)
 }
+
+func (h *userHandler) AddChatRoomUUID(c *gin.Context) {
+	var reqBody models.UserAddChatRoomRequest
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		errResponse := utils.NewErrorResponse(http.StatusBadRequest, "invalid request body")
+		c.JSON(errResponse.StatusCode, errResponse)
+		return
+	}
+
+	value, exist := c.Get(middleware.LOMUserPrefix)
+	if !exist {
+		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, "user not found")
+		c.JSON(errResponse.StatusCode, errResponse)
+		return
+	}
+
+	user, ok := value.(models.UserAuthenticationLOM)
+	if !ok {
+		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, "user not found")
+		c.JSON(errResponse.StatusCode, errResponse)
+		return
+	}
+
+	err := h.userUsecase.AddChatRoomUUID(c, user.Uuid, reqBody.Uuid)
+	if err != nil {
+		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
+		c.JSON(errResponse.StatusCode, errResponse)
+		return
+	}
+
+	res := utils.NewSuccessResponse(http.StatusOK, "chatroom added", nil)
+	c.JSON(res.StatusCode, res)
+}

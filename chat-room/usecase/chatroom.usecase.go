@@ -3,18 +3,27 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
+	"github.com/Sincerelyzl/larb-on-me/common/constants"
+	"github.com/Sincerelyzl/larb-on-me/common/middleware"
 	"github.com/Sincerelyzl/larb-on-me/common/models"
 	"github.com/Sincerelyzl/larb-on-me/common/utils"
+	"github.com/go-resty/resty/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom models.CreateChatRoomRequest) (*models.ChatRoom, error) {
+func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, lomToken string, createByUerUuid string, chatroom models.CreateChatRoomRequest) (*models.ChatRoom, error) {
 
 	// Generate new uuid version 7
-
 	uuidV7, err := utils.NewUuidV7()
+	if err != nil {
+		return nil, err
+	}
+	// Convert uuid to string
+	uuidV7StringChatRoom, err := utils.UuidV7ToString(uuidV7)
 	if err != nil {
 		return nil, err
 	}
@@ -35,23 +44,59 @@ func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, chatroom models.C
 		}
 	}
 
+	// prepare chatroom owner uuid
+	ownerUuid, err := utils.UuidV7FromString(createByUerUuid)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create new chatroom
 	newChatRoom := models.ChatRoom{}
 
 	newChatRoom.Uuid = uuidV7
-	newChatRoom.UsersUuid = []primitive.Binary{}
+	newChatRoom.OwnerUuid = ownerUuid
+	newChatRoom.UsersUuid = []primitive.Binary{
+		ownerUuid,
+	}
 	newChatRoom.MessagesUuid = []primitive.Binary{}
 	newChatRoom.Name = chatroom.Name
 	newChatRoom.JoinCode = joinCode
 	newChatRoom.CreatedAt = utils.GetNowUTCTime()
 	newChatRoom.UpdatedAt = utils.GetNowUTCTime()
 	newChatRoom.DeletedAt = nil
-	// Save chatroom to database
 
+	// Save chatroom to database
 	createdChatRoom, err := uc.chatRoomRepo.CreateChatRoom(ctx, newChatRoom)
 	if err != nil {
 		return nil, err
 	}
+
+	// @TODO : call user-service to update user model
+	// @START
+	userServices, err := uc.registry.Discover(ctx, "user-service")
+	if err != nil {
+		return nil, err
+	}
+	if len(userServices) == 0 {
+		return nil, fmt.Errorf(constants.ErrServiceUnavailable, "user-service")
+	}
+	userService := userServices[0]
+	userServiceClient := resty.New()
+	userServiceClient.SetDebug(true)
+	userServiceClient.SetRetryCount(3)
+	userServiceClient.SetRetryWaitTime(2 * time.Second)
+	userServiceClient.SetHeader(middleware.LOMCookieAuthPrefix, lomToken)
+	body := models.UserAddChatRoomRequest{
+		Uuid: uuidV7StringChatRoom,
+	}
+	res, err := userServiceClient.R().SetBody(body).Patch(fmt.Sprintf("http://%s/v1/user/add.chatroom.uuid", userService))
+	if err != nil {
+		return nil, err
+	}
+	if !res.IsSuccess() {
+		return nil, fmt.Errorf("failed to update user model")
+	}
+	// @END
 
 	return createdChatRoom, nil
 }

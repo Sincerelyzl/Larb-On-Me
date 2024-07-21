@@ -71,6 +71,33 @@ func (r *Registry) Discover(ctx context.Context, serviceName string) ([]string, 
 	return addrs, nil
 }
 
+func (r *Registry) Trigger(ctx context.Context, serviceName string) error {
+	//@ TODO: Sincerelyzl - implement trigger
+	// userServices, err := uc.registry.Discover(ctx, "user-service")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if len(userServices) == 0 {
+	// 	return nil, fmt.Errorf(constants.ErrServiceUnavailable, "user-service")
+	// }
+	// userService := userServices[0]
+	// userServiceClient := resty.New()
+	// userServiceClient.SetDebug(true)
+	// userServiceClient.SetRetryCount(3)
+	// userServiceClient.SetRetryWaitTime(2 * time.Second)
+	// userServiceClient.SetHeader(middleware.LOMCookieAuthPrefix, lomToken)
+	// body := models.UserAddChatRoomRequest{
+	// 	Uuid: uuidV7StringChatRoom,
+	// }
+	// res, err := userServiceClient.R().SetBody(body).Patch(fmt.Sprintf("http://%s/v1/user/add.chatroom.uuid", userService))
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if !res.IsSuccess() {
+	// 	return nil, fmt.Errorf("failed to update user model")
+	// }
+}
+
 func (r *Registry) HealthCheck(instanceId, serviceName string) error {
 	return r.Client.Agent().UpdateTTL(instanceId, "online", consul.HealthPassing)
 }

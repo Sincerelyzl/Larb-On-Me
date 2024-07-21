@@ -156,3 +156,35 @@ func (u *userUsecase) DeleteUser(ctx context.Context, uuid string) (*models.User
 	// return nil if success
 	return userShouldDelete, nil
 }
+
+func (u *userUsecase) AddChatRoomUUID(ctx context.Context, userUuid string, chatRoomUUID string) error {
+	// find user by uuid
+	user, err := u.userRepo.ReadUserByUuid(ctx, userUuid)
+	if err != nil {
+		return err
+	}
+
+	// convert chatroom uuid string to uuid
+	chatRoomUuidV7, err := utils.UuidV7FromString(chatRoomUUID)
+	if err != nil {
+		return err
+	}
+
+	// check if chatroom uuid already exist in user chatroom
+	for _, chatRoom := range user.ChatRoomsUuid {
+		if chatRoom.Equal(chatRoomUuidV7) {
+			return fmt.Errorf(constants.ErrChatRoomAlreadyExistInUserUuid, chatRoomUUID, userUuid)
+		}
+	}
+
+	// add chatroom uuid to user chatroom
+	user.ChatRoomsUuid = append(user.ChatRoomsUuid, chatRoomUuidV7)
+
+	// update user to database
+	if _, err := u.userRepo.UpdateUserByUuid(ctx, userUuid, *user); err != nil {
+		return err
+	}
+
+	// return nil if success
+	return nil
+}

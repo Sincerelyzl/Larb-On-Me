@@ -32,6 +32,10 @@ type UserAuthenticationLOM struct {
 	DeletedAt       *time.Time `json:"deleted_at"`
 }
 
+type UserAddChatRoomRequest struct {
+	Uuid string `json:"uuid" binding:"required"`
+}
+
 type UserRegisterRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`

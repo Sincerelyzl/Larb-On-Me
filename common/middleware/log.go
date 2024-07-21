@@ -32,5 +32,6 @@ func (l *Logger) Middleware() func(c *gin.Context) {
 			statusCode := c.Writer.Status()
 			l.Log.Info(requestMethod, "path", requestPath, "status-code", statusCode, "latency", time.Since(startTime))
 		}(time.Now().UTC())
+		c.Next()
 	}
 }

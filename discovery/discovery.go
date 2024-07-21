@@ -28,7 +28,6 @@ func CreateThreadHealthCheck(ctx context.Context, registry Registry, instanceId,
 			if err := registry.HealthCheck(instanceId, serviceName); err != nil {
 				middleware.LogGlobal.Log.Error("health check", "error", err)
 			}
-			middleware.LogGlobal.Log.Info("health check", "instanceId", instanceId, "serviceName", serviceName)
 			time.Sleep(1 * time.Second)
 		}
 	}()

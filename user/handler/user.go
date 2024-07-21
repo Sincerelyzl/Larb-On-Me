@@ -11,6 +11,7 @@ type UserHandler interface {
 	ChangePassword(c *gin.Context)
 	DeleteUser(c *gin.Context)
 	GetUsers(c *gin.Context)
+	AddChatRoomUUID(c *gin.Context)
 }
 
 type userHandler struct {
