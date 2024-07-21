@@ -72,6 +72,5 @@ func (r *Registry) Discover(ctx context.Context, instanceId string) ([]string, e
 }
 
 func (r *Registry) HealthCheck(instanceId, serviceName string) error {
-	middleware.LogGlobal.Log.Info("health checking", "service", serviceName, "instanceId", instanceId)
 	return r.client.Agent().UpdateTTL(instanceId, "online", consul.HealthPassing)
 }
