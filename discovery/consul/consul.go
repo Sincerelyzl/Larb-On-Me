@@ -96,6 +96,7 @@ func (r *Registry) Trigger(ctx context.Context, serviceName string) error {
 	// if !res.IsSuccess() {
 	// 	return nil, fmt.Errorf("failed to update user model")
 	// }
+	return nil
 }
 
 func (r *Registry) HealthCheck(instanceId, serviceName string) error {
