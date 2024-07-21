@@ -58,8 +58,8 @@ func (r *Registry) Unregister(ctx context.Context, instanceId, serviceName strin
 	return r.Client.Agent().ServiceDeregister(instanceId)
 }
 
-func (r *Registry) Discover(ctx context.Context, instanceId string) ([]string, error) {
-	services, _, err := r.Client.Health().Service(instanceId, "", true, nil)
+func (r *Registry) Discover(ctx context.Context, serviceName string) ([]string, error) {
+	services, _, err := r.Client.Health().Service(serviceName, "", true, nil)
 	if err != nil {
 		return nil, err
 	}
