@@ -24,7 +24,7 @@ import (
 var (
 	consulAddress  = utils.EnvString("CONSUL_ADDRESS", "localhost:8500")
 	serviceHost    = utils.EnvString("SERVICE_HOST", "localhost")
-	servicePort    = utils.EnvString("SERVICE_PORT", ":3008")
+	servicePort    = utils.EnvString("SERVICE_PORT", ":3009")
 	serviceName    = utils.EnvString("SERVICE_NAME", "user-service")
 	mongoURI       = utils.EnvString("MONGO_URI", "mongodb://localhost:27018/")
 	mongoDatabase  = utils.EnvString("MONGO_DATABASE", "user_service")

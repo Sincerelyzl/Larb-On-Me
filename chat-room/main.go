@@ -79,7 +79,7 @@ func main() {
 		panic(err)
 	}
 	instanceId := discovery.GenerateInstaceId(serviceName)
-	if err = registry.Register(ctx, instanceId, serviceHost, servicePort); err != nil {
+	if err = registry.Register(ctx, instanceId, serviceName, serviceHost+servicePort); err != nil {
 		panic(err)
 	}
 
