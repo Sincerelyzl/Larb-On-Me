@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/Sincerelyzl/larb-on-me/common/middleware"
 	"github.com/Sincerelyzl/larb-on-me/common/models"
@@ -52,7 +52,7 @@ func (h *userHandler) Login(c *gin.Context) {
 	}
 
 	lomToken, err := middleware.GenerateLOMKeys(userResponse)
-	println("lom-token: " + lomToken)
+	// println("lom-token: " + lomToken)
 	if err != nil {
 		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
 		c.JSON(errResponse.StatusCode, errResponse)
@@ -65,7 +65,7 @@ func (h *userHandler) Login(c *gin.Context) {
 		c.JSON(errResponse.StatusCode, errResponse)
 		return
 	}
-	fmt.Printf("\ndecrypt-token: %+v", modelLOM)
+	// fmt.Printf("\ndecrypt-token: %+v", modelLOM)
 
 	c.SetCookie(middleware.LOMCookieAuthPrefix, lomToken, int(middleware.LOMExpireTime), "/", "localhost", false, true)
 	c.JSON(http.StatusOK, userResponse)
@@ -182,6 +182,86 @@ func (h *userHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	successResponse := utils.NewSuccessResponse(http.StatusOK, "user deleted", deletedUser)
+	userResponse := models.UserResponse{}
+	uuidString, err := utils.UuidV7ToString(deletedUser.Uuid)
+	if err != nil {
+		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
+		c.JSON(errResponse.StatusCode, errResponse)
+		return
+	}
+
+	userResponse.Uuid = uuidString
+	userResponse.Username = deletedUser.Username
+	userResponse.PermissionGroup = deletedUser.PermissionGroup
+	userResponse.CreatedAt = deletedUser.CreatedAt
+	userResponse.UpdatedAt = deletedUser.UpdatedAt
+	userResponse.DeletedAt = deletedUser.DeletedAt
+	userResponse.ChatRoomsUuid = make([]string, 0)
+
+	for _, chatRoomUuid := range deletedUser.ChatRoomsUuid {
+		chatRoomUuidString, err := utils.UuidV7ToString(chatRoomUuid)
+		if err != nil {
+			errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
+			c.JSON(errResponse.StatusCode, errResponse)
+			return
+		}
+		userResponse.ChatRoomsUuid = append(userResponse.ChatRoomsUuid, chatRoomUuidString)
+	}
+
+	successResponse := utils.NewSuccessResponse(http.StatusOK, "user deleted", userResponse)
 	c.JSON(http.StatusOK, successResponse)
+}
+
+func (h *userHandler) GetUsers(c *gin.Context) {
+	page := int64(1)
+	value, exist := c.GetQuery("page")
+
+	if exist {
+		var err error
+		page, err = strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			errResponse := utils.NewErrorResponse(http.StatusBadRequest, "page query must be a number")
+			c.JSON(errResponse.StatusCode, errResponse)
+			return
+		}
+	}
+
+	users, err := h.userUsecase.GetUsers(c, page)
+
+	usersResponse := []models.UserResponse{}
+	for _, user := range users {
+		userResponse := models.UserResponse{}
+		uuidString, err := utils.UuidV7ToString(user.Uuid)
+		if err != nil {
+			errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
+			c.JSON(errResponse.StatusCode, errResponse)
+			return
+		}
+		userResponse.Uuid = uuidString
+		userResponse.Username = user.Username
+		userResponse.PermissionGroup = user.PermissionGroup
+		userResponse.CreatedAt = user.CreatedAt
+		userResponse.UpdatedAt = user.UpdatedAt
+		userResponse.DeletedAt = user.DeletedAt
+		userResponse.ChatRoomsUuid = make([]string, 0)
+
+		for _, chatRoomUuid := range user.ChatRoomsUuid {
+			chatRoomUuidString, err := utils.UuidV7ToString(chatRoomUuid)
+			if err != nil {
+				errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
+				c.JSON(errResponse.StatusCode, errResponse)
+				return
+			}
+			userResponse.ChatRoomsUuid = append(userResponse.ChatRoomsUuid, chatRoomUuidString)
+		}
+		usersResponse = append(usersResponse, userResponse)
+	}
+
+	if err != nil {
+		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
+		c.JSON(errResponse.StatusCode, errResponse)
+		return
+	}
+
+	c.JSON(http.StatusOK, usersResponse)
 }

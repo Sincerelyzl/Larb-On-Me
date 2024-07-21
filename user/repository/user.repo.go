@@ -3,11 +3,14 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/Sincerelyzl/larb-on-me/common/models"
 	"github.com/Sincerelyzl/larb-on-me/common/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (repo *userRepository) UpdateUser(ctx context.Context, filter, updateUser models.User) (*models.User, error) {
@@ -101,11 +104,11 @@ func (repo *userRepository) ReadUserByUsername(ctx context.Context, username str
 	return &user, nil
 }
 
-func (repo *userRepository) DeleteUserByUuid(ctx context.Context, uuid string) error {
+func (repo *userRepository) DeleteUserByUuid(ctx context.Context, uuid string) (*time.Time, error) {
 	// convert uuid string to uuid version 7
 	uuidV7, err := utils.UuidV7FromString(uuid)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// prepare filter with uuid
@@ -113,30 +116,25 @@ func (repo *userRepository) DeleteUserByUuid(ctx context.Context, uuid string) e
 		"uuid": uuidV7,
 	}
 
+	// prepare delete time
+	deletedAt := utils.GetNowUTCTime()
+
 	// prepare filter update user
 	filterUpdate := bson.M{
 		"$set": bson.M{
-			"$cond": bson.M{
-				"if": bson.M{
-					"$eq": bson.A{
-						"$deleted_at", nil,
-					},
-				},
-				"then": bson.M{
-					"deleted_at": utils.GetNowUTCTime(),
-				},
-			},
+			"deleted_at": deletedAt,
 		},
 	}
 
 	// delete user by uuid
 	_, err = repo.collection.UpdateOne(ctx, filter, filterUpdate)
 	if err != nil {
-		return fmt.Errorf("can't delete user by uuid %s", uuid)
+		fmt.Println("error while deleting user by uuid: ", err)
+		return nil, fmt.Errorf("can't delete user by uuid %s", uuid)
 	}
 
 	// return nil if success
-	return nil
+	return &deletedAt, nil
 }
 
 func (repo *userRepository) CreateUser(ctx context.Context, user models.User) (*models.User, error) {
@@ -159,4 +157,48 @@ func (repo *userRepository) CountUserByUsername(ctx context.Context, username st
 		return 0, fmt.Errorf("can't count user by username %s", username)
 	}
 	return count, nil
+}
+
+func (repo *userRepository) ReadUsers(ctx context.Context, pagination *models.Pagination) ([]*models.User, error) {
+	// Prepare a slice to store the users
+	users := []*models.User{}
+
+	// Set the options for the query
+	findOptions := options.Find()
+	findOptions.SetSkip(pagination.Offset)
+	findOptions.SetLimit(pagination.Limit)
+
+	// Define filter (empty in this case to get all users)
+	filter := bson.M{}
+
+	// Create a context with timeout for the query
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Perform the query
+	cursor, err := repo.collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		log.Println("error while fetching users:", err)
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	// Iterate over the cursor and decode each document into a user model
+	for cursor.Next(ctx) {
+		user := &models.User{}
+		if err := cursor.Decode(&user); err != nil {
+			log.Println("error decoding user:", err)
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	// Check for any cursor errors
+	if err := cursor.Err(); err != nil {
+		log.Println("cursor error:", err)
+		return nil, err
+	}
+
+	// Return the users
+	return users, nil
 }

@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"net/url"
+	"strings"
+
 	"github.com/Sincerelyzl/larb-on-me/common/models"
 	"github.com/Sincerelyzl/larb-on-me/common/utils"
 	"github.com/gin-gonic/gin"
@@ -8,20 +11,32 @@ import (
 
 func AuthenticationLOM(c *gin.Context) {
 	authHeader := c.GetHeader(LOMCookieAuthPrefix)
+	decodedAuthHeader, err := url.QueryUnescape(authHeader)
+	decodedAuthHeader = strings.ReplaceAll(decodedAuthHeader, " ", "+")
 
-	// prepare error response unauthorized
-	if authHeader == "" {
+	// println("header-lom-auth: " + decodedAuthHeader)
+	if err != nil {
 		errResponse := utils.NewErrorResponse(401, "unauthenticated")
 		c.JSON(errResponse.StatusCode, errResponse)
+		c.SetCookie(LOMCookieAuthPrefix, "", -1, "/", "", false, true)
+		c.Abort()
+	}
+
+	// prepare error response unauthorized
+	if decodedAuthHeader == "" {
+		errResponse := utils.NewErrorResponse(401, "unauthenticated")
+		c.JSON(errResponse.StatusCode, errResponse)
+		c.SetCookie(LOMCookieAuthPrefix, "", -1, "/", "", false, true)
 		c.Abort()
 		return
 	}
 
-	var lomUser models.LOMUser
-	err := ClaimsLOM(authHeader, lomUser)
+	lomUser := models.UserAuthenticationLOM{}
+	err = ClaimsLOM(decodedAuthHeader, &lomUser)
 	if err != nil {
 		errResponse := utils.NewErrorResponse(401, err.Error())
 		c.JSON(errResponse.StatusCode, errResponse)
+		c.SetCookie(LOMCookieAuthPrefix, "", -1, "/", "", false, true)
 		c.Abort()
 		return
 	}

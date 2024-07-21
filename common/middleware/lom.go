@@ -10,14 +10,18 @@ import (
 	"io"
 	"time"
 
-	"github.com/Sincerelyzl/larb-on-me/common/models"
+	"github.com/Sincerelyzl/larb-on-me/common/utils"
 )
 
 var (
-	LOMSecretKey        = "okdisodkfi2kdisk"
-	LOMExpireTime       = time.Minute * 10
-	LOMCookieAuthPrefix = "LOM-AUTH"
-	LOMUserPrefix       = "LOM-USER"
+	// LOMSecretKey        = "okdisodkfi2kdisk"
+	// LOMExpireTime       = time.Minute * 10
+	// LOMCookieAuthPrefix = "LOM-AUTH"
+	// LOMUserPrefix       = "LOM-USER"
+	LOMSecretKey        = utils.EnvString("LOM_SECRET_KEY", "okdisodkfi2kdisk")
+	LOMExpireTime       = utils.EnvDuration("LOM_EXPIRE_TIME", "10m")
+	LOMCookieAuthPrefix = utils.EnvString("LOM_COOKIE_AUTH_PREFIX", "LOM-AUTH")
+	LOMUserPrefix       = utils.EnvString("LOM_USER_PREFIX", "LOM-USER")
 )
 
 func encryptString(plaintext string) (string, error) {
@@ -42,7 +46,7 @@ func encryptString(plaintext string) (string, error) {
 	return base64.StdEncoding.EncodeToString(encryptedData), nil
 }
 
-func decryptString(encryptedText string) (*models.LOMKeyWithData, error) {
+func decryptString(encryptedText string) (*LOMKeyWithData, error) {
 	data, err := base64.StdEncoding.DecodeString(encryptedText)
 	if err != nil {
 		return nil, err
@@ -69,7 +73,7 @@ func decryptString(encryptedText string) (*models.LOMKeyWithData, error) {
 		return nil, errors.New("LOM Authentication failed")
 	}
 
-	LOMData := models.LOMKeyWithData{}
+	LOMData := LOMKeyWithData{}
 	errUnmarshal := json.Unmarshal(plaintext, &LOMData)
 	if errUnmarshal != nil {
 		return nil, errUnmarshal
@@ -86,10 +90,11 @@ func GenerateLOMKeys(data any) (string, error) {
 	}
 
 	jsonData := string(bytesData)
-	key := models.LOMKeyWithData{
+	key := LOMKeyWithData{
 		Data:       jsonData,
 		ExpireDate: time.Now().Add(LOMExpireTime),
 	}
+	LogGlobal.Log.Info("info", "expire time", LOMExpireTime)
 
 	bytesKey, err := json.Marshal(key)
 	if err != nil {
@@ -102,6 +107,7 @@ func GenerateLOMKeys(data any) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return encrypted, nil
 }
 
@@ -115,7 +121,6 @@ func ClaimsLOM(encrypted string, toParse any) error {
 	if decrypted.ExpireDate.Before(time.Now()) {
 		return errors.New("token has expired")
 	}
-
 	errUnmarshal := json.Unmarshal([]byte(decrypted.Data), toParse)
 	if errUnmarshal != nil {
 		return errUnmarshal

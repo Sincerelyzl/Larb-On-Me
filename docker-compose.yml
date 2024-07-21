@@ -1,0 +1,19 @@
+services:
+  consul-server:
+    image: "hashicorp/consul"
+    container_name: "consul-server"
+    command: "agent -server -ui -node=larb-on-me-server-1 -bootstrap-expect=1 -client=0.0.0.0"
+    ports:
+      - "8500:8500"
+
+  user-db:
+    image: "mongo:latest"
+    container_name: "user-db"
+    ports:
+      - "27018:27017"
+
+  chatroom-db:
+    image: "mongo:latest"
+    container_name: "chatroom-db"
+    ports:
+      - "27019:27017"
