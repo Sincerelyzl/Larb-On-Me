@@ -7,16 +7,21 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"time"
+
+	"github.com/Sincerelyzl/larb-on-me/common/utils"
 )
 
 var (
-	LOMSecretKey        = "okdisodkfi2kdisk"
-	LOMExpireTime       = time.Minute * 10
-	LOMCookieAuthPrefix = "LOM-AUTH"
-	LOMUserPrefix       = "LOM-USER"
+	// LOMSecretKey        = "okdisodkfi2kdisk"
+	// LOMExpireTime       = time.Minute * 10
+	// LOMCookieAuthPrefix = "LOM-AUTH"
+	// LOMUserPrefix       = "LOM-USER"
+	LOMSecretKey        = utils.EnvString("LOM_SECRET_KEY", "okdisodkfi2kdisk")
+	LOMExpireTime       = utils.EnvDuration("LOM_EXPIRE_TIME", "10m")
+	LOMCookieAuthPrefix = utils.EnvString("LOM_COOKIE_AUTH_PREFIX", "LOM-AUTH")
+	LOMUserPrefix       = utils.EnvString("LOM_USER_PREFIX", "LOM-USER")
 )
 
 func encryptString(plaintext string) (string, error) {
@@ -89,6 +94,7 @@ func GenerateLOMKeys(data any) (string, error) {
 		Data:       jsonData,
 		ExpireDate: time.Now().Add(LOMExpireTime),
 	}
+	LogGlobal.Log.Info("info", "expire time", LOMExpireTime)
 
 	bytesKey, err := json.Marshal(key)
 	if err != nil {
@@ -102,7 +108,6 @@ func GenerateLOMKeys(data any) (string, error) {
 		return "", err
 	}
 
-	println("\nencrypted: " + encrypted)
 	return encrypted, nil
 }
 
@@ -116,7 +121,6 @@ func ClaimsLOM(encrypted string, toParse any) error {
 	if decrypted.ExpireDate.Before(time.Now()) {
 		return errors.New("token has expired")
 	}
-	fmt.Println("\ndata: " + decrypted.Data)
 	errUnmarshal := json.Unmarshal([]byte(decrypted.Data), toParse)
 	if errUnmarshal != nil {
 		return errUnmarshal

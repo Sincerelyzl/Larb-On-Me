@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -53,7 +52,7 @@ func (h *userHandler) Login(c *gin.Context) {
 	}
 
 	lomToken, err := middleware.GenerateLOMKeys(userResponse)
-	println("lom-token: " + lomToken)
+	// println("lom-token: " + lomToken)
 	if err != nil {
 		errResponse := utils.NewErrorResponse(http.StatusInternalServerError, err.Error())
 		c.JSON(errResponse.StatusCode, errResponse)
@@ -66,7 +65,7 @@ func (h *userHandler) Login(c *gin.Context) {
 		c.JSON(errResponse.StatusCode, errResponse)
 		return
 	}
-	fmt.Printf("\ndecrypt-token: %+v", modelLOM)
+	// fmt.Printf("\ndecrypt-token: %+v", modelLOM)
 
 	c.SetCookie(middleware.LOMCookieAuthPrefix, lomToken, int(middleware.LOMExpireTime), "/", "localhost", false, true)
 	c.JSON(http.StatusOK, userResponse)

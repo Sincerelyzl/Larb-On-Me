@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"github.com/Sincerelyzl/larb-on-me/common/middleware"
+	"github.com/Sincerelyzl/larb-on-me/common/utils"
 	"github.com/Sincerelyzl/larb-on-me/user/handler"
 	"github.com/gin-gonic/gin"
 )
@@ -28,4 +29,6 @@ func setupUserRouteV1(r *gin.Engine, userHandler handler.UserHandler) {
 		"owner":      true,
 		"superadmin": true,
 	}), userHandler.DeleteUser)
+
+	userRoutesV1.GET("/health", utils.HealthCheck())
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,10 +9,26 @@ import (
 	"time"
 
 	"github.com/Sincerelyzl/larb-on-me/common/database"
+	"github.com/Sincerelyzl/larb-on-me/common/middleware"
+	"github.com/Sincerelyzl/larb-on-me/common/utils"
+	"github.com/Sincerelyzl/larb-on-me/discovery"
+	"github.com/Sincerelyzl/larb-on-me/discovery/consul"
 	"github.com/Sincerelyzl/larb-on-me/user/handler"
 	"github.com/Sincerelyzl/larb-on-me/user/httpserver"
 	"github.com/Sincerelyzl/larb-on-me/user/repository"
 	"github.com/Sincerelyzl/larb-on-me/user/usecase"
+
+	_ "github.com/joho/godotenv/autoload"
+)
+
+var (
+	consulAddress  = utils.EnvString("CONSUL_ADDRESS", "localhost:8500")
+	serviceHost    = utils.EnvString("SERVICE_HOST", "localhost")
+	servicePort    = utils.EnvString("SERVICE_PORT", ":3009")
+	serviceName    = utils.EnvString("SERVICE_NAME", "user-service")
+	mongoURI       = utils.EnvString("MONGO_URI", "mongodb://localhost:27018/")
+	mongoDatabase  = utils.EnvString("MONGO_DATABASE", "user_service")
+	collectionUser = utils.EnvString("COLLECTION_USER", "users")
 )
 
 func main() {
@@ -23,11 +37,11 @@ func main() {
 	ctx := context.Background()
 
 	// create connection database timeout.
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	// Connect to database server.
-	client, err := database.NewConnection(ctxWithTimeout, "mongodb://localhost:27018/")
+	client, err := database.NewConnection(ctxWithTimeout, mongoURI)
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +53,7 @@ func main() {
 	}
 
 	// Get all collection need to use.
-	userCollection := client.Database("user_service").Collection("users")
+	userCollection := client.Database(mongoDatabase).Collection(collectionUser)
 
 	// Create all repository to use.
 	userRepo := repository.NewMongoUserRepository(userCollection)
@@ -55,9 +69,22 @@ func main() {
 
 	// create http server.
 	server := &http.Server{
-		Addr:    ":3008",
+		Addr:    servicePort,
 		Handler: userHttpServer.Router,
 	}
+
+	// registry consul
+	registry, err := consul.NewRegistry(consulAddress, serviceName)
+	if err != nil {
+		panic(err)
+	}
+	instanceId := discovery.GenerateInstaceId(serviceName)
+	if err = registry.Register(ctx, instanceId, serviceName, serviceHost+servicePort); err != nil {
+		panic(err)
+	}
+
+	// Health check.
+	discovery.CreateThreadHealthCheck(ctx, registry, instanceId, serviceName)
 
 	// Handle signal.
 	done := make(chan os.Signal)
@@ -65,7 +92,7 @@ func main() {
 
 	// Run http server.
 	go func() {
-		fmt.Println("user-service is running on port " + server.Addr)
+		middleware.LogGlobal.Log.Info("service is running", "service-name", serviceName, "port", servicePort)
 		if err := userHttpServer.Run(server.Addr); err != nil {
 			panic(err)
 		}
@@ -74,13 +101,17 @@ func main() {
 	// Wait for signal.
 	<-done
 
+	// unregister consul
+	if err = registry.Unregister(ctx, instanceId, serviceName); err != nil {
+		middleware.LogGlobal.Log.Error("unregister service", "error", err)
+	}
+
 	// Shutdown http server.
-	fmt.Println("user-service is shutting down")
+	middleware.LogGlobal.Log.Fatal("service shutting down", "service-name", serviceName, "port", servicePort)
 	ctxWithTimeout, cancel = context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		log.Println("error while shutting down Server. Initiating force shutdown...")
-		log.Fatalln(err)
+		middleware.LogGlobal.Log.Fatal("server shutdown", "error", err)
 	}
-	log.Println("server exiting")
+	middleware.LogGlobal.Log.Info("shutdown gracefully", "service-name", serviceName, "port", servicePort)
 }
