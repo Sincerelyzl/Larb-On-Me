@@ -12,7 +12,7 @@ import (
 )
 
 type Registry struct {
-	client *consul.Client
+	Client *consul.Client
 }
 
 func NewRegistry(addr, serviceName string) (*Registry, error) {
@@ -22,7 +22,7 @@ func NewRegistry(addr, serviceName string) (*Registry, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Registry{client: client}, nil
+	return &Registry{Client: client}, nil
 }
 
 func (r *Registry) Register(ctx context.Context, instanceId, serviceName, hostPort string) error {
@@ -50,16 +50,16 @@ func (r *Registry) Register(ctx context.Context, instanceId, serviceName, hostPo
 		},
 	}
 
-	return r.client.Agent().ServiceRegister(agentRegistration)
+	return r.Client.Agent().ServiceRegister(agentRegistration)
 }
 
 func (r *Registry) Unregister(ctx context.Context, instanceId, serviceName string) error {
 	middleware.LogGlobal.Log.Info("unregistering service", "service", serviceName, "instanceId", instanceId)
-	return r.client.Agent().ServiceDeregister(instanceId)
+	return r.Client.Agent().ServiceDeregister(instanceId)
 }
 
 func (r *Registry) Discover(ctx context.Context, instanceId string) ([]string, error) {
-	services, _, err := r.client.Health().Service(instanceId, "", true, nil)
+	services, _, err := r.Client.Health().Service(instanceId, "", true, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -72,5 +72,5 @@ func (r *Registry) Discover(ctx context.Context, instanceId string) ([]string, e
 }
 
 func (r *Registry) HealthCheck(instanceId, serviceName string) error {
-	return r.client.Agent().UpdateTTL(instanceId, "online", consul.HealthPassing)
+	return r.Client.Agent().UpdateTTL(instanceId, "online", consul.HealthPassing)
 }

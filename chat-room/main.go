@@ -6,6 +6,7 @@ import (
 	"time"
 
 	repository "github.com/Sincerelyzl/larb-on-me/chat-room/repository/chatroom"
+	"github.com/Sincerelyzl/larb-on-me/discovery/consul"
 	"github.com/gin-gonic/gin"
 
 	"github.com/Sincerelyzl/larb-on-me/chat-room/handler"
@@ -18,6 +19,24 @@ func main() {
 
 	// create context.
 	ctx := context.Background()
+
+	// @ TESTING CONSUL
+	registry, err := consul.NewRegistry("localhost:8500", "chat-room-service")
+	if err != nil {
+		panic(err)
+	}
+	err = registry.Register(context.Background(), "chat-room-service-1", "chat-room-service", "localhost:3009")
+	if err != nil {
+		panic(err)
+	}
+	services, err := registry.Client.Agent().Services()
+	if err != nil {
+		panic(err)
+	}
+	for _, service := range services {
+		fmt.Println(service.Service)
+	}
+	// TESTING CONSUL @
 
 	// create connection database timeout.
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
