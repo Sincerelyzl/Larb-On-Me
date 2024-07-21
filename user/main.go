@@ -84,14 +84,7 @@ func main() {
 	}
 
 	// Health check.
-	go func() {
-		for {
-			if err := registry.HealthCheck(instanceId, serviceName); err != nil {
-				middleware.LogGlobal.Log.Error("health check", "error", err)
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}()
+	discovery.CreateThreadHealthCheck(ctx, registry, instanceId, serviceName)
 
 	// Handle signal.
 	done := make(chan os.Signal)
