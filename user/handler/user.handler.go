@@ -267,6 +267,7 @@ func (h *userHandler) GetUsers(c *gin.Context) {
 }
 
 func (h *userHandler) AddChatRoomUUID(c *gin.Context) {
+
 	var reqBody models.UserAddChatRoomRequest
 
 	if err := c.ShouldBindJSON(&reqBody); err != nil {

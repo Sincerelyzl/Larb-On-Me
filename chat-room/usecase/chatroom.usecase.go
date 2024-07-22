@@ -3,14 +3,9 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fmt"
-	"time"
 
-	"github.com/Sincerelyzl/larb-on-me/common/constants"
-	"github.com/Sincerelyzl/larb-on-me/common/middleware"
 	"github.com/Sincerelyzl/larb-on-me/common/models"
 	"github.com/Sincerelyzl/larb-on-me/common/utils"
-	"github.com/go-resty/resty/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -71,32 +66,14 @@ func (uc *chatRoomUsecase) CreateChatRoom(ctx context.Context, lomToken string, 
 		return nil, err
 	}
 
-	// @TODO : call user-service to update user model
-	// @START
-	userServices, err := uc.registry.Discover(ctx, "user-service")
-	if err != nil {
-		return nil, err
-	}
-	if len(userServices) == 0 {
-		return nil, fmt.Errorf(constants.ErrServiceUnavailable, "user-service")
-	}
-	userService := userServices[0]
-	userServiceClient := resty.New()
-	userServiceClient.SetDebug(true)
-	userServiceClient.SetRetryCount(3)
-	userServiceClient.SetRetryWaitTime(2 * time.Second)
-	userServiceClient.SetHeader(middleware.LOMCookieAuthPrefix, lomToken)
+	// call user-service to update user model
 	body := models.UserAddChatRoomRequest{
 		Uuid: uuidV7StringChatRoom,
 	}
-	res, err := userServiceClient.R().SetBody(body).Patch(fmt.Sprintf("http://%s/v1/user/add.chatroom.uuid", userService))
-	if err != nil {
-		return nil, err
+	_, errResponse := uc.registry.Patch(ctx, "user-service", "/v1/user/add.chatroom.uuid", &lomToken, body, nil)
+	if errResponse != nil {
+		return nil, errResponse
 	}
-	if !res.IsSuccess() {
-		return nil, fmt.Errorf("failed to update user model")
-	}
-	// @END
 
 	return createdChatRoom, nil
 }
