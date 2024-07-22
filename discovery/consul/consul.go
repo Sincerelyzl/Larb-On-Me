@@ -89,18 +89,18 @@ func (r *Registry) DiscoveOne(ctx context.Context, serviceName string) (domain s
 // @Usage: Post to another service
 // @Param: path - the path to trigger Eg. /v1/user
 // @Param: lomToken - the token to authenticate the request
-// @Param: body - the body to send to the service
+// @Param: body - the body to send to the service (struct || interface{} || []byte)
 // @Param: resultParseType - the type to parse the result into
 // @Return: *resty.Response - the response from the service
 // @Return: error - if the service is unavailable
-func (r *Registry) Post(ctx context.Context, serviceName, path string, lomToken *string, body *interface{}, resultParseType *interface{}) (*resty.Response, error) {
+func (r *Registry) Post(ctx context.Context, serviceName, path string, lomToken *string, body any, resultParseType *interface{}) (*resty.Response, error) {
 	domain, err := r.DiscoveOne(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
 
 	restyClient := resty.New()
-	restyClient.SetDebug(true)
+	//restyClient.SetDebug(true)
 	restyClient.SetRetryCount(3)
 	restyClient.SetRetryWaitTime(2 * time.Second)
 	if lomToken != nil {
@@ -127,18 +127,18 @@ func (r *Registry) Post(ctx context.Context, serviceName, path string, lomToken 
 // @Usage: Get to another service
 // @Param: path - the path to trigger Eg. /v1/user
 // @Param: lomToken - the token to authenticate the request
-// @Param: body - the body to send to the service
+// @Param: body - the body to send to the service (struct || interface{} || []byte)
 // @Param: resultParseType - the type to parse the result into
 // @Return: *resty.Response - the response from the service
 // @Return: error - if the service is unavailable
-func (r *Registry) Get(ctx context.Context, serviceName, path string, lomToken *string, body *interface{}, resultParseType *interface{}) (*resty.Response, error) {
+func (r *Registry) Get(ctx context.Context, serviceName, path string, lomToken *string, body any, resultParseType *interface{}) (*resty.Response, error) {
 	domain, err := r.DiscoveOne(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
 
 	restyClient := resty.New()
-	restyClient.SetDebug(true)
+	//restyClient.SetDebug(true)
 	restyClient.SetRetryCount(3)
 	restyClient.SetRetryWaitTime(2 * time.Second)
 	if lomToken != nil {
@@ -165,20 +165,21 @@ func (r *Registry) Get(ctx context.Context, serviceName, path string, lomToken *
 // @Usage: Patch to another service
 // @Param: path - the path to trigger Eg. /v1/user
 // @Param: lomToken - the token to authenticate the request
-// @Param: body - the body to send to the service
+// @Param: body - the body to send to the service (struct || interface{} || []byte)
 // @Param: resultParseType - the type to parse the result into
 // @Return: *resty.Response - the response from the service
 // @Return: error - if the service is unavailable
-func (r *Registry) Patch(ctx context.Context, serviceName, path string, lomToken *string, body *interface{}, resultParseType *interface{}) (*resty.Response, error) {
+func (r *Registry) Patch(ctx context.Context, serviceName, path string, lomToken *string, body any, resultParseType *interface{}) (*resty.Response, error) {
 	domain, err := r.DiscoveOne(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
 
 	restyClient := resty.New()
-	restyClient.SetDebug(true)
 	restyClient.SetRetryCount(3)
 	restyClient.SetRetryWaitTime(2 * time.Second)
+	restyClient.SetRetryMaxWaitTime(2 * time.Second)
+	restyClient.SetDebug(true)
 	if lomToken != nil {
 		restyClient.SetHeader(middleware.LOMCookieAuthPrefix, *lomToken)
 	}
@@ -194,6 +195,9 @@ func (r *Registry) Patch(ctx context.Context, serviceName, path string, lomToken
 		return nil, err
 	}
 	if !res.IsSuccess() {
+		if res.Error() != nil {
+			return nil, res.Error().(error)
+		}
 		return nil, fmt.Errorf("failed to patch to service %s", serviceName)
 	}
 	return res, nil
@@ -203,18 +207,18 @@ func (r *Registry) Patch(ctx context.Context, serviceName, path string, lomToken
 // @Usage: Put to another service
 // @Param: path - the path to trigger Eg. /v1/user
 // @Param: lomToken - the token to authenticate the request
-// @Param: body - the body to send to the service
+// @Param: body - the body to send to the service (struct || interface{} || []byte)
 // @Param: resultParseType - the type to parse the result into
 // @Return: *resty.Response - the response from the service
 // @Return: error - if the service is unavailable
-func (r *Registry) Put(ctx context.Context, serviceName, path string, lomToken *string, body *interface{}, resultParseType *interface{}) (*resty.Response, error) {
+func (r *Registry) Put(ctx context.Context, serviceName, path string, lomToken *string, body any, resultParseType *interface{}) (*resty.Response, error) {
 	domain, err := r.DiscoveOne(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
 
 	restyClient := resty.New()
-	restyClient.SetDebug(true)
+	//restyClient.SetDebug(true)
 	restyClient.SetRetryCount(3)
 	restyClient.SetRetryWaitTime(2 * time.Second)
 	if lomToken != nil {
@@ -241,25 +245,22 @@ func (r *Registry) Put(ctx context.Context, serviceName, path string, lomToken *
 // @Usage: Delete to another service
 // @Param: path - the path to trigger Eg. /v1/user
 // @Param: lomToken - the token to authenticate the request
-// @Param: body - the body to send to the service
+// @Param: body - the body to send to the service (struct || interface{} || []byte)
 // @Param: resultParseType - the type to parse the result into
 // @Return: *resty.Response - the response from the service
 // @Return: error - if the service is unavailable
-func (r *Registry) Delete(ctx context.Context, serviceName, path string, lomToken *string, body *interface{}, resultParseType *interface{}) (*resty.Response, error) {
+func (r *Registry) Delete(ctx context.Context, serviceName, path string, lomToken *string, body any, resultParseType *interface{}) (*resty.Response, error) {
 	domain, err := r.DiscoveOne(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
 
 	restyClient := resty.New()
-	restyClient.SetDebug(true)
+	//restyClient.SetDebug(true)
 	restyClient.SetRetryCount(3)
 	restyClient.SetRetryWaitTime(2 * time.Second)
 	if lomToken != nil {
-		if lomToken != nil {
-			restyClient.SetHeader(middleware.LOMCookieAuthPrefix, *lomToken)
-		}
-
+		restyClient.SetHeader(middleware.LOMCookieAuthPrefix, *lomToken)
 	}
 
 	req := restyClient.R()
