@@ -14,7 +14,6 @@ func AuthenticationLOM(c *gin.Context) {
 	decodedAuthHeader, err := url.QueryUnescape(authHeader)
 	decodedAuthHeader = strings.ReplaceAll(decodedAuthHeader, " ", "+")
 
-	// println("header-lom-auth: " + decodedAuthHeader)
 	if err != nil {
 		errResponse := utils.NewErrorResponse(401, "unauthenticated")
 		c.JSON(errResponse.StatusCode, errResponse)

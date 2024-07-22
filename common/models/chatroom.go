@@ -18,6 +18,18 @@ type ChatRoom struct {
 	DeletedAt    *time.Time         `json:"deleted_at" bson:"deleted_at"`
 }
 
+type ChatRoomResponse struct {
+	Uuid         string     `json:"uuid"`
+	OwnerUuid    string     `json:"owner_uuid"`
+	UsersUuid    []string   `json:"users_uuid"`
+	MessagesUuid []string   `json:"messages_uuid"`
+	Name         string     `json:"name"`
+	JoinCode     string     `json:"join_code"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+	DeletedAt    *time.Time `json:"deleted_at"`
+}
+
 type CreateChatRoomRequest struct {
 	Name string `json:"name" binding:"required"`
 }
