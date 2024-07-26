@@ -25,13 +25,17 @@ func NewLogger(opts log.Options) *Logger {
 }
 
 func (l *Logger) Middleware() func(c *gin.Context) {
+
 	return func(c *gin.Context) {
 		defer func(startTime time.Time) {
 			requestMethod := c.Request.Method
 			requestPath := c.Request.URL.Path
 			statusCode := c.Writer.Status()
-			l.Log.Info(requestMethod, "path", requestPath, "status-code", statusCode, "latency", time.Since(startTime))
+			response := c.Writer.Body.String()
+			l.Log.Info(requestMethod, "path", requestPath, "status-code", statusCode, "latency", time.Since(startTime), "response", response)
 		}(time.Now().UTC())
+
 		c.Next()
 	}
+
 }

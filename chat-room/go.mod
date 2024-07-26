@@ -1,6 +1,6 @@
 module github.com/Sincerelyzl/larb-on-me/chat-room
 
-go 1.23
+go 1.22.4
 
 require (
 	github.com/Sincerelyzl/larb-on-me/common v0.0.0-20240720221203-bfb99131d97f

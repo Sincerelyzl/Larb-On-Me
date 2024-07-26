@@ -1,6 +1,6 @@
 module github.com/Sincerelyzl/larb-on-me/discovery
 
-go 1.23rc2
+go 1.22.4
 
 require (
 	github.com/Sincerelyzl/larb-on-me/common v0.0.0-20240720224538-f80afcc0503e
