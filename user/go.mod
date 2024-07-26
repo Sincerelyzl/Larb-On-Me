@@ -1,8 +1,7 @@
 module github.com/Sincerelyzl/larb-on-me/user
 
-go 1.22.5
+go 1.22.4
 
-replace github.com/Sincerelyzl/larb-on-me/discovery => ../discovery
 
 require (
 	github.com/Sincerelyzl/larb-on-me/common v0.0.0-20240720224538-f80afcc0503e
@@ -67,3 +66,5 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/Sincerelyzl/larb-on-me/discovery => ../discovery
